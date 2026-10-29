@@ -349,6 +349,14 @@ public:
     }
     bool startDisplay(IOService *provider) {
         if(!IOMobileFramebufferLegacy::start(provider))return false;
+        /* PosterBoard and CollectionsPoster, the two processes that own the wallpaper, are each
+         * refused iokit-get-properties on this class, while backboardd and SpringBoard -- the two
+         * that do draw -- are not. The check runs on the client side against the registry's
+         * IOClass before the driver is asked, and the shipped profile lists Apple's class names
+         * only. dcls=1 republishes the same service under the panel controller's name, which is
+         * the cheap test that tells whether the refusal is what stops the wallpaper. */
+        unsigned dcls=0;PE_parse_boot_argn("dcls",&dcls,sizeof(dcls));
+        if(dcls==1)setProperty("IOClass","AppleCLCD2");
         if(primary && bootMapping)announcePoweredByFirmware();
         unsigned enabled=0;PE_parse_boot_argn("offline-legacy-pm",&enabled,sizeof(enabled));
         if(!enabled)return true;
